@@ -1,0 +1,62 @@
+.main-container {
+    height: 100vh;
+}
+.sub-container {
+    width: 100%;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+/** map container - first grid styles **/
+.map-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+.map-container-content {
+    flex-direction: column;
+}
+
+/* configuration container - second grid styles  */
+.config-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    padding-left: 30px;
+}
+.config-title {
+    font-weight: 300;
+    font-family: 'Poppins', sans-serif;
+    font-size: 20px;
+    text-align: left;
+}
+.config-description {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    margin-top: 25px;
+    text-align: left;
+}
+
+
+/* common styles */
+.container-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-title {
+    font-weight: 100;
+    font-size: 20px;
+    font-family: 'Poppins', sans-serif;
+}
+
+
+.slot-style {
+    cursor: pointer;
+}
+.slot-style:hover {
+    background-color: #b3b3b3;
+}
