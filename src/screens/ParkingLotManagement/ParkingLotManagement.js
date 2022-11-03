@@ -46,6 +46,8 @@ function ParkingLotManagement() {
   const [vehicleSize, setVehicleSize] = useState('');
   const [entrance, setEntrance] = useState('');
   const [plateNumber, setPlateNumber] = useState('');
+  const [showErrorMessagePark, setShowErrorMessagePark] = useState(false);
+  const [errorMessagePark, setErrorMessagePark] = useState('Please complete the form before proceeding')
 
   // states for unparking vehicle
   const [openUnpark, setOpenUnpark] = useState(false);
@@ -53,15 +55,20 @@ function ParkingLotManagement() {
   const [dataToUnpark, setDataToUnpark] = useState({});
   const [exitType, setExitType] = useState('');
   const [parkingData, setParkingData] = useState([]);
+  const [showErrorUnpark, setShowErrorUnpark] = useState(false);
+  const [errorMessageUnpark, setErrorMessageUnpark] = useState('')
   
   // states for modifying the date
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(false);
+  const [negativeHours, setNegativeHours] = useState(false)
 
   // states for adding new entrance
   const [newEntrance, setNewEntrance] = useState('');
   const [newEntranceName, setNewEntranceName] = useState('');
   const [openAddEntrance, setOpenAddEntrance] = useState(false);
+  const [showErrorMessageEntrance, setShowErrorMessageEntrance] = useState(false);
+  const [errorMessageEntrance, setErrorMessageEntrance] = useState('');
 
   // INITIALIZATION OF PARKING LOT SYSTEM
   useEffect(() => {
@@ -88,25 +95,30 @@ function ParkingLotManagement() {
     };
   }, []);
 
-  
   // HANDLERS FOR PARKING VEHICLE ---------------------------
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
     setOpen(false);
     setVehicleSize('');
+    setEntrance('');
+    setPlateNumber('');
+    setErrorMessagePark('')
   };
   // select the vehicle size and filter the available slots based on the size
   const handleVehicleSize = (size) => {
     const parseSize = parseInt(size.target.value)
     setVehicleSize(parseSize);
+    setShowErrorMessagePark(false)
   }
   // select entrance where vehicle will came from
   const handleAssignedEntrance = (event) => {
     setEntrance(event.target.value)
+    setShowErrorMessagePark(false)
   }
   // provide plate number details
   const handlePlateNumber = (plateNo) => {
     setPlateNumber(plateNo.target.value)
+    setShowErrorMessagePark(false)
   }
   // park vehicle function
   const parkVehicle = async () => {
@@ -115,41 +127,67 @@ function ParkingLotManagement() {
       entrance: entrance,
       plateNo: plateNumber,
     }
-    await parkingLotManager.parkVehicle({parkObject, currentDate: selectedDate ? currentDate : new Date(), size: vehicleSize});
-    setEntrance('');
-    setPlateNumber('');
-    handleClose();
+    if ( entrance !== '' && plateNumber !== '' && vehicleSize !== '') {
+      const dataParking = await parkingLotManager.parkVehicle({parkObject, currentDate: selectedDate ? currentDate : new Date(), size: vehicleSize});
+      if (dataParking && dataParking.parkingSuccessful){
+        handleClose();
+      } else {
+        setShowErrorMessagePark(true)
+        setErrorMessagePark(dataParking.errorMessage);
+      }
+    } else {
+      setShowErrorMessagePark(true)
+      setErrorMessagePark('Please complete the form before proceeding');
+    }
   }
   // END OF HANDLERS FOR PARKING THE VEHILCE ---------------------
 
 
   // HANDLERS FOR UNPARKING THE VEHICLE FROM PARKING COMPLEX ------------------
   const handleOpenUnpark = async (data) => {
-    setOpenUnpark(true);
-    setDataToUnpark(data);
     const dataVal = await parkingLotManager.parkingRate({parkObject: data, currentDate: selectedDate ? currentDate : new Date()});
-    setParkingData(dataVal)
-    setParkingRate(dataVal.totalParkingCharge);
+    if (!dataVal.computeSuccessful) {
+      setOpenUnpark(true);
+      setNegativeHours(true)
+      setDataToUnpark(data);
+      setParkingData(dataVal)
+      setShowErrorUnpark(true);
+      setErrorMessageUnpark('You have a negative hour value. Please change the value of time with the current to later time')
+    } else {
+      setOpenUnpark(true);
+      setNegativeHours(false)
+      setDataToUnpark(data);
+      setParkingData(dataVal)
+      setParkingRate(dataVal.totalParkingCharge);
+    }
   };
   const handleCloseUnpark = () => {
     setOpenUnpark(false)
+    setExitType('')
+    setShowErrorUnpark(false)
+    setErrorMessageUnpark('')
+    setNegativeHours(false)
   }
   // select the exit type
   const handleExitType = (exitVal) => {
     const parseExit = parseInt(exitVal.target.value)
     setExitType(parseExit)
+    setShowErrorUnpark(false)
   }
   // main function for unparking vehicle, calling unparkTemporary function from parkingLotManager Class
   const unparkVehicle = async () => {
     // 2 types of unparking, temporary and release
-    if(exitType === 1){
-      await parkingLotManager.unparkTemporary({parkObject: dataToUnpark, currentDate: selectedDate ? currentDate : new Date()});
-      handleCloseUnpark();
-      setExitType('');
+    if(exitType !== ''){
+      if(exitType === 1){
+        await parkingLotManager.unparkTemporary({parkObject: dataToUnpark, currentDate: selectedDate ? currentDate : new Date()});
+        handleCloseUnpark();
+      } else {
+        await parkingLotManager.unparkVehicle({parkObject: dataToUnpark})
+        handleCloseUnpark();
+      }
     } else {
-      await parkingLotManager.unparkVehicle({parkObject: dataToUnpark})
-      handleCloseUnpark();
-      setExitType('');
+      setErrorMessageUnpark('Please select exit type.')
+      setShowErrorUnpark(true)
     }
   }
   // END OF HANDLERS FOR UNPARKING THE VEHICLE FROM PARKING COMPLEX ---------------
@@ -167,26 +205,41 @@ function ParkingLotManagement() {
   }
   const handleCloseEntranceModal = () => {
     setOpenAddEntrance(false)
+    setNewEntranceName('');
+    setNewEntrance('');
+    setErrorMessageEntrance('')
+    setShowErrorMessageEntrance(false)
   }
   const handleSelectNewEntrance = (entrance) => {
     setNewEntrance(entrance.target.value)
+    setShowErrorMessageEntrance(false)
   }
   const handleNewEntranceName = (entranceName) => {
     setNewEntranceName(entranceName.target.value)
+    setShowErrorMessageEntrance(false)
   }
   // main function for adding new entrance
   const addEntrance =  async () => {
-    await parkingLotManager.addEntrance({newEntranceName: newEntranceName, entranceId: newEntrance})
-    const newInactiveList = inactiveEntrance.filter((obj) => obj.parking_id !== newEntrance)
-    setSlots(parkingLotManager.getAllSlots())
-    setEntranceList(parkingLotManager.entrance)
-    setInactiveEntrance(newInactiveList)
-    handleCloseEntranceModal();
-    setNewEntranceName('');
-    setNewEntrance('');
+    if (newEntranceName !== '' && newEntrance !== '') {
+      const dataAddEntrance = await parkingLotManager.addEntrance({newEntranceName: newEntranceName, entranceId: newEntrance})
+      if (dataAddEntrance.addSuccessful) {
+        const newInactiveList = inactiveEntrance.filter((obj) => obj.parking_id !== newEntrance)
+        setSlots(parkingLotManager.getAllSlots())
+        setEntranceList(parkingLotManager.entrance)
+        setInactiveEntrance(newInactiveList)
+        handleCloseEntranceModal();
+      } else if (dataAddEntrance && !dataAddEntrance.addSuccessful) {
+        setShowErrorMessageEntrance(true)
+        setErrorMessageEntrance(dataAddEntrance.errorMessage);
+      }
+    } else {
+      setShowErrorMessageEntrance(true)
+      setErrorMessageEntrance('Please complete the form before proceeding');
+    }
+
   }
   // END OF HANDLERS FOR ADDING ENTRANCE ------------------------
- 
+
   // MAIN SCREEN UI COMPONENTS STARTS HERE
   return (
     <div
@@ -198,8 +251,8 @@ function ParkingLotManagement() {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          paddingLeft: 20,
-          paddingRight: 20
+          paddingLeft: 10,
+          paddingRight: 10
         }}
       >
         <Grid
@@ -228,7 +281,6 @@ function ParkingLotManagement() {
             <Grid
               item
               container
-              lg={12}
               className='container-center'
               style={{ height: '100%', marginTop: 20 }}
             >
@@ -388,6 +440,21 @@ function ParkingLotManagement() {
           >
             Assigned Parking Slot
           </Button>
+          {
+            showErrorMessagePark &&
+            <Typography
+              sx={{
+                fontFamily: 'Poppins',
+                color: 'red',
+                fontSize: 12,
+                fontWeight: 'bold',
+                textAlign: 'center',
+                mt: 2
+              }}
+            >
+              {errorMessagePark}
+            </Typography>
+          }
         </Box>
       </Modal>
       <Modal
@@ -430,6 +497,7 @@ function ParkingLotManagement() {
           <Button 
             variant="contained" 
             size="medium"
+            disabled={negativeHours ? true : false}
             onClick={unparkVehicle}
             disableElevation={true}
             sx={{
@@ -443,6 +511,21 @@ function ParkingLotManagement() {
           >
             Unpark Vehicle
           </Button>
+          {
+            showErrorUnpark &&
+            <Typography
+              sx={{
+                fontFamily: 'Poppins',
+                color: 'red',
+                fontSize: 12,
+                fontWeight: 'bold',
+                textAlign: 'center',
+                mt: 2
+              }}
+            >
+              {errorMessageUnpark}
+            </Typography>
+          }
         </Box>
       </Modal>
       <Modal
@@ -505,6 +588,21 @@ function ParkingLotManagement() {
           >
             Add New Entrance
           </Button>
+          {
+            showErrorMessageEntrance &&
+            <Typography
+              sx={{
+                fontFamily: 'Poppins',
+                color: 'red',
+                fontSize: 12,
+                fontWeight: 'bold',
+                textAlign: 'center',
+                mt: 2
+              }}
+            >
+              {errorMessageEntrance}
+            </Typography>
+          }
         </Box>
       </Modal>
       </Box>

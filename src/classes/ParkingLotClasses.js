@@ -89,11 +89,11 @@ class ParkingLotManager {
       return false;
     }
   }
-
+  // restructured the space array
   restructureSlotArray(slot){
     this.restructedSlotsArray.push(slot);
   }
-
+  // get all restructued slots
   getAllSlots() {
     return this.restructedSlotsArray;
   }
@@ -120,9 +120,14 @@ class ParkingLotManager {
   async addEntrance({newEntranceName, entranceId}) {
     const findEntranceSlot = this.restructedSlotsArray.find((obj) => obj.parking_id === entranceId);
     const entranceObject = this.spaces[findEntranceSlot.row][findEntranceSlot.col]
-
     if (entranceObject) {
-      if (entranceObject.entrance_name === newEntranceName) return 'Existing Entrance Name'
+      if (this.entrance.find((obj) => obj.entranceName === newEntranceName)) {
+        const objectToReturn = {
+          addSuccessful: false,
+          errorMessage: 'Existing Entrance Name. Please change the entrance name.'
+        }
+        return objectToReturn;
+      }
       else {
         const SpotObject = {
           ...entranceObject,
@@ -159,10 +164,12 @@ class ParkingLotManager {
         parking_hours_start: currentDate ? currentDate : new Date(),
       }
     }
+    this.temporaryUnparked = this.temporaryUnparked.filter((obj) => obj.vehicle_attribute.vehicle_plate_no !== findTempUnparked.vehicle_attribute.vehicle_plate_no);
     Object.assign(this.spaces[findTempUnparked.row][findTempUnparked.col], SpotObject)
     const returnObject = {
       updatedSpaces: this.spaces,
-      assignedSlot: this.spaces[findTempUnparked.row][findTempUnparked.col]
+      assignedSlot: this.spaces[findTempUnparked.row][findTempUnparked.col],
+      parkingSuccessful: true
     }
     return returnObject;
   }
@@ -187,12 +194,15 @@ class ParkingLotManager {
   // park the vehicle to the nearest slot in the entrance and update the spaces - Responsibility #4
   async parkVehicle({parkObject, currentDate, size}){
     const entrance = this.entrance.find(gate => gate.entranceName === parkObject.entrance);
+    const findSamePlateNo = this.restructedSlotsArray.find((obj) => 
+      obj.vehicle_attribute?.vehicle_plate_no === parkObject.plateNo
+    )
     let distance = 9999;
 
     if (this.temporaryUnparked.length > 0) {
       const findTempUnparked = this.temporaryUnparked.find((obj) =>
        obj.vehicle_attribute.vehicle_plate_no === parkObject.plateNo
-      );      
+      );    
       // compute the time of temp exit and the current time if it exceeds one hour
       // if time exceeds to one hour, adjust the flat rate and double the amount
       const tempExitHours = moment(findTempUnparked.vehicle_attribute.temp_parking_hours_exit, 'YYYY-MM-DD HH:mm:ss');
@@ -200,10 +210,16 @@ class ParkingLotManager {
       const totalExitHours = moment.duration(currentTimeAndDate.diff(tempExitHours)).asHours()
       // if total exit hours exceeds 1 hour update the spot object with new parking rate, else parking rate defaults to 0
       if (totalExitHours > 1) {
-        this.updateSpotObject(findTempUnparked, currentDate, totalExitHours)
+        return this.updateSpotObject(findTempUnparked, currentDate, totalExitHours)
       } else {
-        this.updateSpotObject(findTempUnparked, currentDate, null)
+        return this.updateSpotObject(findTempUnparked, currentDate, null)
       }
+    }  else if (findSamePlateNo && findSamePlateNo.vehicle_attribute.vehicle_temp_status === false) {
+        const returnObject = {
+          parkingSuccessful: false,
+          errorMessage: 'Duplicate Plate No'
+        }
+        return returnObject;
     } else {
       // find the nearest parking space based on it's size
       await this.findNearestParkingSpace({size, entrance, distance})
@@ -288,6 +304,12 @@ class ParkingLotManager {
     const parking_start = moment(parkObject.vehicle_attribute.parking_hours_start, 'YYYY-MM-DD HH:mm:ss');
     const currentTimeAndDate = moment(currentDate ? currentDate : new Date(), 'YYYY-MM-DD HH:mm:ss');
     const hours =  moment.duration(currentTimeAndDate.diff(parking_start)).asHours();
+    if (hours < 0) {
+      return {
+        computeSuccessful: false,
+        errorMessage: 'You have inputted a negative hours'
+      }
+    }
     let remainingTime = hours
     let totalParkingCharge = 0;
 
@@ -351,4 +373,3 @@ class ParkingComplexManager {
 }
 
 export default ParkingComplexManager;
-

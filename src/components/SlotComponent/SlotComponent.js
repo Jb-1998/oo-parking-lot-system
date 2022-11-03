@@ -9,10 +9,18 @@ function SlotComponent({index, data, handleOpenUnpark}){
     if (data.entrance === true && data.open === false) return '#9e9e9e'
     return ''
   }
+  const slotName = (data) => {
+    if (data.entrance) return `Entrance-${data.entrance_name}`
+    if (data.occupied) return data.vehicle_attribute.vehicle_plate_no
+    return 'Not Occupied'
+  }
   return (
     <Grid
       item
-      xs={1.2}
+      lg={1.2}
+      md={0.1}
+      sm={0.1}
+      xs={0.1}
       key={index}
       style={{
       height: 100,
@@ -31,7 +39,7 @@ function SlotComponent({index, data, handleOpenUnpark}){
     >
     <p style={{ fontSize: 12, textAlign: 'center' }}>
       {data.row}-{data.col}-{data.parking_size}
-      <br/>{data.entrance ? `Entrance-${data.entrance_name}` : (data.occupied ? 'Occupied' : 'Not Occupied')}
+      <br/> {slotName(data)}
     </p>
   </Grid>
   )
