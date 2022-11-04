@@ -7,7 +7,7 @@ function SlotComponent({index, data, handleOpenUnpark}){
     if (data.vehicle_attribute && data.vehicle_attribute.vehicle_temp_status === true) return '#eba134'
     if (data.occupied && data.vehicle_attribute && data.vehicle_attribute.vehicle_temp_status === false) return '#348feb'
     if (data.entrance === true && data.open === false) return '#9e9e9e'
-    return ''
+    return '#fff'
   }
   const slotName = (data) => {
     if (data.entrance) return `Entrance-${data.entrance_name}`

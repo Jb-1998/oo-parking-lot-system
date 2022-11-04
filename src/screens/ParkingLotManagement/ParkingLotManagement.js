@@ -15,6 +15,8 @@ import {
   MenuItem,
   InputLabel,
   TextField,
+  Alert,
+  AlertTitle
 } from '@mui/material';
 // calendar picker from material ui imports
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
@@ -23,6 +25,7 @@ import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
 
 // separated component for slots
 import SlotComponent from '../../components/SlotComponent/SlotComponent';
+import BoxComponent from '../../components/SlotComponent/BoxComponent';
 
 // classes for logic and functionality of parking slots
 import ParkingComplexManager from '../../classes/ParkingLotClasses';
@@ -127,7 +130,13 @@ function ParkingLotManagement() {
       entrance: entrance,
       plateNo: plateNumber,
     }
-    if ( entrance !== '' && plateNumber !== '' && vehicleSize !== '') {
+    const sizeVal = slots.some(obj => obj.parking_size === vehicleSize)
+    if(sizeVal === false){
+      setShowErrorMessagePark(true)
+      setErrorMessagePark('No available parking slot for the vehicle size.');
+      return true;
+    }
+    if (sizeVal === true && entrance !== '' && plateNumber !== '' && vehicleSize !== '') {
       const dataParking = await parkingLotManager.parkVehicle({parkObject, currentDate: selectedDate ? currentDate : new Date(), size: vehicleSize});
       if (dataParking && dataParking.parkingSuccessful){
         handleClose();
@@ -288,6 +297,10 @@ function ParkingLotManagement() {
                 <SlotComponent key={index} index={index} data={data} handleOpenUnpark={handleOpenUnpark} />
               ))}
             </Grid>
+            <Alert severity="info" style={{ width: 'inherit' }}>
+              <AlertTitle>Unparking Instruction</AlertTitle>
+              To unpark the vehicle, <strong>please click the occupied or temporary unparked slot </strong> to open the unpark modal.
+            </Alert>
           </Grid>
           <Grid
             item
@@ -310,6 +323,32 @@ function ParkingLotManagement() {
                 Parking Managment Configuration allows to manage the parking slots on different Floor of Object Oriented Mall Parking Complex.
                 Below are the settings for you to park and unpark the vehicles in the available slots for each floor.
               </Typography>
+              <Typography 
+                variant='inherit'
+                className='config-description'
+                style={{ marginTop: 10, fontWeight: 'bold' }}
+              >
+                Map Boxes color guide:
+              </Typography>
+              <Box
+                sx={{
+                  flexDirection: 'row',
+                  display: 'flex'
+                }}
+              >
+                <BoxComponent color={'#14ff3b'} description={'Entrance'}/>
+                <BoxComponent color={'#348feb'} description={'Occupied'}/>
+                <BoxComponent color={'#eba134'} description={'Temporary Unparked'}/>
+              </Box>
+              <Box
+                sx={{
+                  flexDirection: 'row',
+                  display: 'flex'
+                }}
+              >
+                <BoxComponent color={'#9e9e9e'} description={'Possible Entrance'}/>
+                <BoxComponent color={'#fff'} description={'Unoccupied slot'}/>
+              </Box>
               <Grid
                 style={{
                   marginTop: 20,

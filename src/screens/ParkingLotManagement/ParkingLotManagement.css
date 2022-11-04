@@ -34,8 +34,7 @@
 }
 .config-description {
     font-family: 'Poppins', sans-serif;
-    font-size: 13px;
-    margin-top: 25px;
+    font-size: 11px;
     text-align: left;
 }
 
@@ -59,4 +58,13 @@
 }
 .slot-style:hover {
     background-color: #b3b3b3;
+}
+
+
+.box-style {
+    width: 20px;
+    height: 20px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: black;
 }
