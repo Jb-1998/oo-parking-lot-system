@@ -1,6 +1,7 @@
 # Getting Started with OO Parking Lot System
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+![parking-lot-web-image](https://user-images.githubusercontent.com/57854970/199880317-6fdad1c8-4bc2-4d60-b13b-8dda97dd35ea.PNG)
 
 ## Project Details
 OO Parking Lot
