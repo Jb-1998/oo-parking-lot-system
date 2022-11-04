@@ -3,6 +3,9 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 ![parking-lot-web-image](https://user-images.githubusercontent.com/57854970/199880317-6fdad1c8-4bc2-4d60-b13b-8dda97dd35ea.PNG)
 
+### Parking Lot Demo
+[Click here to access the demo hosted in AWS S3]([https://nodejs.org/en/download/](http://oo-parking-lot-system.s3-website-ap-southeast-1.amazonaws.com/?fbclid=IwAR3JHG19IWVYfaX3IQFk-0PvHku3F_L6iSVMdJScTFIY_HZqNz9ZfWtUFI8))
+
 ## Project Details
 OO Parking Lot
 
